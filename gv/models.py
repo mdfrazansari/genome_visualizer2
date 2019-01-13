@@ -16,3 +16,22 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+        
+
+class Patient(models.Model):
+    name = models.CharField(max_length=200)
+    disease_type = models.CharField(max_length=200)
+    remarks = models.TextField()
+    vcf_file = models.FileField(upload_to='uploads/')
+    creation_date = models.DateTimeField(default=timezone.now)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return self.name
+        
+class PatientGenomeVariation(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    variation_data = models.TextField()
+    
+    def __str__(self):
+        return "Genome Variation (" + self.patient.name + ")"

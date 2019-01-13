@@ -1,0 +1,638 @@
+{% load static %}
+<!DOCTYPE html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="theme-color" content="#721c24">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Genome Visualizer</title>
+        <link rel="stylesheet" href="{% static 'mdl/material.min.css' %}">
+        <script src="{% static 'mdl/material.min.js' %}"></script>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">	
+        <link rel="stylesheet" href="{% static 'css/base.css' %}">
+        <style>
+        .selected {
+          fill: red;
+          stroke: brown;
+        }
+
+        .scaling-svg-container {
+
+             /* override this inline for aspect ratio other than square */
+        }
+        .scaling-svg {
+             /*position: absolute; */
+             /*height: 100%; */
+             width: 100%; 
+             left: 0; 
+             top: 0;
+            }
+
+        rect:focus {
+            fill: red;
+            width: 5px;
+        }
+    
+           .mdl-layout-title {
+            	color: #721c24;
+            	font-weight: bold;
+            }
+            
+            #view-source {
+              position: fixed;
+              display: block;
+              right: 0;
+              bottom: 0;
+              margin-right: 40px;
+              margin-bottom: 40px;
+              z-index: 900;
+            }
+    
+            #new-application-table td {
+            	    border-top: 0px solid rgba(0,0,0,.12);
+            		border-bottom: 0px solid rgba(0,0,0,.12);
+            		text-align: left;
+            		line-height: 40px !important;
+            		vertical-align: middle !important;
+            }
+    
+            #new-application-table th {
+            	    border-top: 0px solid rgba(0,0,0,.12);
+            		border-bottom: 0px solid rgba(0,0,0,.12);
+            		line-height: 40px !important;
+            		vertical-align: middle !important;
+            }
+        </style>
+    </head>
+    <body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+
+      <div class="android-header mdl-layout__header mdl-layout__header--waterfall" style="color: blue">
+        <div class="mdl-layout__header-row">
+          <span class="mdl-layout-title">
+            Genome Visualizer
+          </span>
+          <!-- Add spacer, to align navigation to the right in desktop -->
+          <div class="android-header-spacer mdl-layout-spacer"></div>
+          <div class="android-search-box mdl-textfield mdl-js-textfield mdl-textfield--expandable mdl-textfield--floating-label mdl-textfield--align-right mdl-textfield--full-width">
+            <label class="mdl-button mdl-js-button mdl-button--icon" for="search-field">
+              <i class="material-icons">search</i>
+            </label>
+            <div class="mdl-textfield__expandable-holder">
+              <input class="mdl-textfield__input" type="text" id="search-field">
+            </div>
+          </div>
+          <!-- Navigation -->
+          <div class="android-navigation-container">
+            <nav class="android-navigation mdl-navigation">
+              <a class="mdl-navigation__link mdl-typography--text-uppercase" href="index.htm">Dashboard</a>
+              <a class="mdl-navigation__link mdl-typography--text-uppercase" href="pending.htm">Pending</a>
+              <a class="mdl-navigation__link mdl-typography--text-uppercase" href="Analyzed.htm">Analyzed</a>
+              <a class="mdl-navigation__link mdl-typography--text-uppercase" href="closed.htm">Closed</a>
+            </nav>
+          </div>
+          <button class="android-more-button mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect" id="more-button">
+            <i class="material-icons">more_vert</i>
+          </button>
+          <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right mdl-js-ripple-effect" for="more-button">
+            <li class="mdl-menu__item">Logout</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="android-drawer mdl-layout__drawer">
+        <span class="mdl-layout-title">
+          Genome Visualizer
+        </span>
+        <nav class="mdl-navigation">
+          <a class="mdl-navigation__link" href="index.htm">Dashboard</a>
+          <a class="mdl-navigation__link" href="pending.htm">Pending</a>
+          <a class="mdl-navigation__link" href="analyzed.htm">Analyzed</a>
+          <a class="mdl-navigation__link" href="closed.htm">Closed</a>
+          <div class="android-drawer-separator"></div>
+        </nav>
+      </div>
+      <div class="android-content mdl-layout__content">
+        <a name="top"></a>
+            <div>
+<div class="container-fluid">
+      <div class="row">
+        <div class="col-md-10" >
+            <div class="scaling-svg-container" height="100">  
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="col table table-bordered table-sm">
+              <table>
+                <thead class="thead-light">
+                  <tr>
+                    <th>Band Name</th>
+                    <th>Color</th>
+                  </tr>
+                  <tr></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>gneg</td>
+                    <td style="background-color:#9d1cb2"> </td>
+                  </tr>
+                  <tr>
+                    <td>gpos25</td>
+                    <td style="background-color:#cdde20"> </td>
+                  </tr>
+                  <tr>
+                    <td>gpos50</td>
+                    <td style="background-color:#ffc200"> </td>
+                  </tr>
+                  <tr>
+                    <td>gpos75</td>
+                    <td style="background-color:#ff9900"> </td>
+                  </tr>
+                  <tr>
+                    <td>gpos100</td>
+                    <td style="background-color:#7a5547"> </td>
+                  </tr>
+                  <tr>
+                    <td>acen</td>
+                    <td style="background-color:#5f7d8c"> </td>
+                  </tr>
+                  <tr>
+                    <td>gvar</td>
+                    <td style="background-color:#9e9e9e"> </td>
+                  </tr>
+                  <tr>
+                    <td>stalk</td>
+                    <td style="background-color:#ec1261"> </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col table-responsive-sm">
+            <table data-toggle="table" class="table table-dark table-striped table-sm variation-table" data-search="true"
+                data-search-align="left"
+                data-search="true" data-show-refresh="true"
+                data-show-columns="true"
+                data-detail-view="true" data-minimum-count-columns="2"
+                data-pagination="true" data-id-field="id"
+                data-page-list="[10, 25, 50, 100, ALL]">
+
+                <thead>
+                    <tr>
+                        <th data-field="CHROM">CHROM</th>
+                        <th data-field="POS" data-sortable="true">POS</th>
+                        <th data-field="ID">ID</th>
+                        <th data-field="REF">REF</th>
+                        <th data-field="ALT_1">ALT_1</th>
+                        <th data-field="ALT_2" data-visible='false'>ALT_2</th>
+                        <th data-field="ALT_3" data-visible='false'>ALT_3</th>
+                        <th data-field="QUAL">QUAL</th>
+                        <th data-field="PRO">PRO</th>
+                        <th data-field="EPP_1">EPP_1</th>
+                        <th data-field="EPP_2" data-visible='false'>EPP_2</th>
+                        <th data-field="EPP_3" data-visible='false'>EPP_3</th>
+                        <th data-field="SRF">SRF</th>
+                        <th data-field="AB_1">AB_1</th>
+                        <th data-field="AB_2" data-visible='false'>AB_2</th>
+                        <th data-field="AB_3" data-visible='false'>AB_3</th>
+                        <th data-field="NUMALT">NUMALT</th>
+                        <th data-field="SRR">SRR</th>
+                        <th data-field="RPPR">RPPR</th>
+                        <th data-field="QA_1">QA_1</th>
+                        <th data-field="QA_2">QA_2</th>
+                        <th data-field="RUN_1">RUN_1</th>
+                        <th data-field="RUN_2">RUN_2</th>
+                        
+                        <th data-field="RUN_3">RUN_3</th>
+                        <th data-field="MQM_1">MQM_1</th>
+                        <th data-field="MQM_2">MQM_2</th>
+                        <th data-field="MQM_3">MQM_3</th>
+                        <th data-field="DPB">DPB</th>
+                        <th data-field="PAIREDR">PAIREDR</th>
+                        <th data-field="SAR_1">SAR_1</th>
+                        <th data-field="SAR_2">SAR_2</th>
+                        <th data-field="SAR_3">SAR_3</th>
+                        <th data-field="DPRA_1">DPRA_1</th>
+                        <th data-field="DPRA_2">DPRA_2</th>
+                        <th data-field="DPRA_3">DPRA_3</th>
+                        <th data-field="BVAR">BVAR</th>
+                        <th data-field="DP">DP</th>
+                        <th data-field="RO">RO</th>
+                        <th data-field="GTI">GTI</th>
+                        <th data-field="ODDS">ODDS</th>
+                        <th data-field="AC_1">AC_1</th>
+                        <th data-field="AC_2">AC_2</th>
+                        <th data-field="AC_3">AC_3</th>
+                        <th data-field="AF_1">AF_1</th>
+                        <th data-field="AF_2">AF_2</th>
+                        <th data-field="AF_3">AF_3</th>
+                        <th data-field="PAO_1">PAO_1</th>
+                        
+                        <th data-field="PAO_2">PAO_2</th>
+                        <th data-field="PAO_3">PAO_3</th>
+                        <th data-field="PAIRED_1">PAIRED_1</th>
+                        <th data-field="PAIRED_2">PAIRED_2</th>
+                        <th data-field="PAIRED_3">PAIRED_3</th>
+                        <th data-field="CIGAR_1">CIGAR_1</th>
+                        <th data-field="CIGAR_2">CIGAR_2</th>
+                        <th data-field="CIGAR_3">CIGAR_3</th>
+                        <th data-field="PQR">PQR</th>
+                        <th data-field="AO_1">AO_1</th>
+                        <th data-field="AO_2">AO_2</th>
+                        <th data-field="AO_3">AO_3</th>
+                        <th data-field="LEN_1">LEN_1</th>
+                        <th data-field="LEN_2">LEN_2</th>
+                        <th data-field="LEN_3">LEN_3</th>
+                        <th data-field="SRP">SRP</th>
+                        <th data-field="ABP_1">ABP_1</th>
+                        <th data-field="ABP_2">ABP_2</th>
+                        <th data-field="ABP_3">ABP_3</th>
+                        <th data-field="ID">RPP_1</th>
+
+                        <th data-field="RPP_2">RPP_2</th>
+                        <th data-field="RPP_3">RPP_3</th>
+                        <th data-field="MEANALT_1">MEANALT_1</th>
+                        <th data-field="MEANALT_2">MEANALT_2</th>
+                        <th data-field="MEANALT_3">MEANALT_3</th>
+                        <th data-field="MQMR">MQMR</th>
+                        <th data-field="QR">QR</th>
+                        <th data-field="SAP_1">SAP_1</th>
+                        <th data-field="SAP_2">SAP_2</th>
+                        <th data-field="SAP_3">SAP_3</th>
+                        <th data-field="PQA_1">PQA_1</th>
+                        <th data-field="PQA_2">PQA_2</th>
+                        <th data-field="PQA_3">PQA_3</th>
+                        <th data-field="TYPE_1">TYPE_1</th>
+                        <th data-field="TYPE_2">TYPE_2</th>
+                        <th data-field="TYPE_3">TYPE_3</th>
+                        <th data-field="EPPR">EPPR</th>
+                        <th data-field="SAF_1">SAF_1</th>
+                        <th data-field="SAF_2">SAF_2</th>
+                        <th data-field="SAF_3">SAF_3</th>
+                        <th data-field="FILTER_PASS">FILTER_PASS</th>
+                        <th data-field="numalt">numalt</th>
+                        <th data-field="svlen_1">svlen_1</th>
+                        <th data-field="svlen_2">svlen_2</th>
+                        <th data-field="svlen_3">svlen_3</th>
+                        <th data-field="is_snp">is_snp</th>
+                        
+                    </tr>
+                </thead>
+            </table>
+          </div>
+        </div>
+    </div>
+
+    <!-- Graphs -->
+    <script src={% static "/d3/d3.v4.min.js" %} type="text/javascript"></script>
+    <script src={% static "/jquery/jquery-3.3.1.js" %} type="text/javascript"></script>
+    
+<script>
+
+
+class GenomeSlider {
+    constructor(container, idSuffix, pqArmData) {
+        this.config = {
+            margin: {top: 20, right: 20, bottom: 30, left: 40},
+            extraPaddingRight: 100,
+            brushWidth: 200,
+        }
+
+        this.svgSelector = ".svg-" + idSuffix;
+        this.idSuffix = idSuffix;
+        var svgCreator = "<div class='row'><div class='col-md-11'><svg class='scaling-svg svg-" + idSuffix + "' height='120' width='110'>" +
+                "<defs>" +
+                    "<clipPath id='mask-" + idSuffix +"'>" +
+                      "<rect x='0' y='0' width='" + this.getWidth() + "' height='" + (this.getHeight() + this.config.margin.top) + "' />"+
+                    "</clipPath>" +
+                "</defs></svg></div><div class='col-md-1'><button tabindex=-1 class='btn-" + idSuffix +"' style='color: blue; margin-top:" + this.getHeight() +"px'><i class='fas fa-search-plus'></i></button></div></div>";
+        container.append($(svgCreator));
+        this.container = container;
+        this.svg = d3.select(this.svgSelector);
+        this.x = d3.scaleLinear().rangeRound([0, this.getWidth()])
+        this.y = d3.scaleBand().rangeRound([this.getHeight(), 0]).padding(0.1);
+        this.g = this.svg.append("g")
+            .attr("class", "chart")
+            .attr('clip-path', "url(#mask-" + idSuffix + ")")
+            .attr("transform", "translate(" + this.config.margin.left + "," + this.config.margin.top + ")");
+        this.brush = d3.brushX()
+            .extent([[0, 0], [this.getWidth(), this.getHeight()]])
+            .on("start brush", () => this.brushed(this));
+        this.bisectVariation = d3.bisector(function(d) { return d.POS; }).left;
+        $(".btn-"+idSuffix).click(() => this.test(this));
+        
+    }
+    test() {
+        if(!this.gs) {
+            this.addChildLevel();
+        }
+    }
+
+    empty() {
+        $('.chart', $(this.svgSelector)).empty();
+    }
+
+    setXDomain(extent) {
+        this.x.domain(extent);
+        this.g.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", "translate(0," + this.getHeight() + ")")
+            .call(d3.axisBottom(this.x));
+    }
+
+    setYDomain(extent) {
+        this.y.domain(extent);
+        $(".axis--y", $(this.svgSelector)).remove();
+        this.svg.append("g")
+          .attr("class", "axis axis--y")
+          .attr("transform", "translate(" + this.config.margin.left + "," + this.config.margin.top + ")")
+          .call(d3.axisLeft(this.y));
+    }
+
+    renderPQBand(data) {
+        this.pqd = data;
+        var p_arm_g = this.g.append("g").attr('class', "p-arm");
+        var q_arm_g = this.g.append("g").attr('class', "q-arm");  
+        var x = this.x;
+        var y = this.y; 
+
+        var p_arms = p_arm_g.selectAll("line")
+            .data(data)
+            .enter()
+            .append("line")
+            .attr("class", "bar")
+            .attr("x1", y.bandwidth()/2)
+            .attr("y1", function(d, i) {return y(d.chrom) + y.bandwidth()/2; })
+            .attr("y2", function(d, i) {return y(d.chrom) + y.bandwidth()/2; })
+            .attr("x2", 0)
+            .style("stroke-width", y.bandwidth())
+            .attr("stroke-linecap", "round")
+            .attr("stroke", "#00bcd6");
+
+
+        p_arms
+        //.transition()
+          //  .ease(d3.easeLinear)
+           // .duration(function(d){return x(d.chromEnd_x)})
+            .attr("x2", function(d) {return x(d.chromEnd_x) - y.bandwidth()/2});
+
+        var q_arms = q_arm_g.selectAll("line")
+            .data(data)
+            .enter()
+            .append("line")
+            .attr("class", "bar")
+            .attr("x1",  function(d) {return x(d.chromEnd_x) + y.bandwidth()/2})
+            .attr("y1", function(d, i) {return y(d.chrom) + y.bandwidth()/2; })
+            .attr("y2", function(d, i) {return y(d.chrom) + y.bandwidth()/2; })
+            .attr("x2", function(d) {return x(d.chromEnd_x) - y.bandwidth()/2})
+            .style("stroke-width", y.bandwidth())
+            .attr("stroke-linecap", "round")
+            .attr("stroke", "#3f4eb8");
+
+        q_arms
+        //.transition()
+          //  .ease(d3.easeLinear)
+            //.duration(function(d){return x(d.chromEnd_y)})
+            .attr("x2", function(d) {return x(d.chromEnd_y) - y.bandwidth()/2});
+    }
+
+    renderCytoBand(data) {
+        this.cbd = data;
+        var bands_g = this.g.append("g").attr('class', "bands");
+        var x = this.x;
+        var y = this.y;
+        var bands = bands_g.selectAll("rect")
+              .data(data)
+              .enter()
+              .append("rect")
+              .attr("class", "bar")
+              .attr("x",  function(d) { return x(d.chromStart)})
+              .attr("y", function(d, i) {return y(d.chrom) + y.bandwidth()/4; })
+              .attr("height", function(d, i) {return  y.bandwidth()/2; })
+              .attr("width", function(d) {return x(d.chromEnd) - x(d.chromStart);})
+              .attr("fill", function(d) {
+                if(d.gieStain=='gneg') {//gneg', 'gpos25', 'gpos50', 'gpos75', 'gpos100', 'acen', 'gvar','stalk
+                  return "#9d1cb2";
+                } else if (d.gieStain=='gpos25') {
+                  return "#cdde20";
+                } else if (d.gieStain=='gpos50') {
+                  return "#ffc200";
+                } else if (d.gieStain=='gpos75') {
+                  return "#ff9900";
+                } else if (d.gieStain=='gpos100') {
+                  return "#7a5547";
+                } else if (d.gieStain=='acen') {
+                  return "#5f7d8c";
+                } else if (d.gieStain=='gvar') {
+                  return "#9e9e9e";
+                } else if (d.gieStain=='stalk') {
+                  return "#ec1261";
+                }
+              });
+    }
+
+    renderVariations(variationData) {
+        this.vd = variationData;
+        var x = this.x;
+        var y =this.y;
+        var variations_g = this.g.append("g").attr("class", "variations");
+        variations_g.selectAll("circle")
+        .data(variationData)
+        .enter()
+        .append("rect")
+        .attr("class", "tabbable-rect")
+        .attr("y", function(d) {return (y(d.CHROM));})
+        .attr("x", function(d) {return x(d.POS)})
+        .attr("data-x", function(d) {return d.POS})
+        .attr("height", y.bandwidth())
+        .attr("width", 1)
+        .attr("tabindex", function(d) {return d.POS > x.domain()[0] && d.POS <x.domain()[1]?0:-1 })
+        .attr("fill", "black");
+
+        var variation_count_g = this.g.append("g").attr("class", "variation-count");
+        var count = this.bisectVariation(this.vd, x.domain()[1]) - this.bisectVariation(this.vd, x.domain()[0]);
+        variation_count_g.append("text")
+        .attr("x", this.getWidth()-100)
+        .attr("y", -y.bandwidth()/2 - 10)
+        .attr("dy", y.bandwidth())
+        .attr("fill", "orange")
+        .text(count + " variations");
+        
+        this.renderBrush([0, this.config.brushWidth]);
+    }
+
+    renderBrush(extent) {
+        var x = this.x;
+        this.g.append("g")
+          .attr('class', 'brush-g')
+          .call(this.brush)
+          .call(this.brush.move, extent)
+          .selectAll(".overlay")
+          .each(function(d) { d.type = "selection"; }) // Treat overlay interaction as move.
+          .on("mousedown touchstart", null); // Recenter before brushing.
+    }
+
+    renderCensus(censusData) {
+        this.cd = censusData;
+        var census_g = this.g.append("g").attr('class', "census");
+        var x = this.x;
+        var y = this.y;
+        var census_bands = census_g.selectAll("rect")
+              .data(this.cd)
+              .enter()
+              .append("rect")
+              .attr("class", "bar")
+              .attr("x",  function(d) { return x(d["Genome Location"].split(":")[1].split("-")[0])})
+              .attr("y", function(d, i) { var chrom = "chr" + d["Genome Location"].split(":")[0]; return y(chrom) + y.bandwidth()/4; })
+              .attr("height", function(d, i) {return  y.bandwidth()/2; })
+              .attr("width", function(d) {return x(d["Genome Location"].split(":")[1].split("-")[1]) - x(d["Genome Location"].split(":")[1].split("-")[0]);})
+              .attr("fill", "cyan");
+    }
+
+    addChildLevel() {
+        this.gs = new GenomeSlider(this.container, this.idSuffix+1)
+        if(this.idSuffix != 1) {
+            this.gs.empty();
+            var x = parseInt($(".selection", $(this.svgSelector)).attr("x"));
+            var y = parseInt($(".selection", $(this.svgSelector)).attr("width"));
+            this.gs.setXDomain([x, x+y].map(this.x.invert, this.x));
+            this.gs.setYDomain(this.y.domain());
+            this.gs.renderCytoBand(this.cbd);
+            this.gs.renderVariations(this.vd);
+            this.gs.renderCensus(this.cd);
+        }
+    }
+
+    brushed(self) {
+        if (this.gs) {
+            this.gs.empty();
+            this.gs.setXDomain(d3.event.selection.map(this.x.invert, this.x));
+            this.gs.setYDomain(this.y.domain());
+            this.gs.renderCytoBand(this.cbd);
+            this.gs.renderVariations(this.vd);
+            this.gs.renderCensus(this.cd);
+            //this.gs.renderPQBand(this.pqd);
+        } else {
+            var selection = d3.event.selection.map(this.x.invert, this.x)
+            var tableData = this.vd.slice(this.bisectVariation(this.vd, selection[0]), this.bisectVariation(this.vd, selection[1]));
+            $(".variation-table").bootstrapTable('load', tableData);
+        }
+    }
+        
+    getWidth() {
+           return container.width() - this.config.margin.left - this.config.margin.right - this.config.extraPaddingRight;
+    }
+
+    getHeight() {
+           return 80;//container.height() - this.config.margin.top - this.config.margin.bottom;
+    }
+}
+    var container = $('.scaling-svg-container');
+    gs = new GenomeSlider(container, 1);
+    loadPQArmData();
+    gs.addChildLevel();
+    var gvd;
+
+    function loadPQArmData() {
+        let pqArmDataPromise = new Promise(function(resolve, reject) {
+                        var pqDataUrl = "/getPQArmData/{{chrom}}";
+                        d3.json(pqDataUrl, function(error, data) {
+                            if (error) {
+                                reject("Can't load data from " + pqDataUrl);
+                                return;
+                            }
+                            resolve(data);
+                        });
+                    });
+
+        pqArmDataPromise.then(
+            result => {
+                gs.setXDomain([0, d3.max(result, function(d) { return d.chromEnd_y; })]);
+                gs.setYDomain(result.map(function(d) { return d.chrom; }));
+                gs.renderPQBand(result);
+                loadCytoBandData();},
+            error => alert(error)
+        );
+    }
+
+    function loadCytoBandData() {
+        let cytoBandDataPromise = new Promise(function(resolve, reject) {
+                        var cytoBandDataUrl = "/getCytoBand/{{chrom}}";
+                        d3.json(cytoBandDataUrl, function(error, data) {
+                            if (error) {
+                                reject("Can't load data from " + cytoBandDataUrl);
+                                return;
+                            }
+                            resolve(data);
+                        });
+                    });
+
+        cytoBandDataPromise.then(
+            result => {gs.renderCytoBand(result); loadCensusData()},
+            error => alert(error)
+        );
+    }
+
+    function loadCensusData() {
+        let censusDataPromise = new Promise(function(resolve, reject) {
+                        var censusDataUrl = "/getCensusData/{{chrom}}";
+                        d3.json(censusDataUrl, function(error, data) {
+                            if (error) {
+                                reject("Can't load data from " + censusDataUrl);
+                                return;
+                            }
+                            resolve(data);
+                        });
+                    });
+
+        censusDataPromise.then(
+            result => {gs.renderCensus(result); loadVariationData()},
+            error => alert(error)
+        );
+    }
+
+    function loadVariationData() {
+        let variationDataPromise = new Promise(function(resolve, reject) {
+                        var variationDataUrl = "/getVariationAllDetails/2/{{chrom}}";
+                        d3.json(variationDataUrl, function(error, variationData) {
+                            if (error) {
+                                reject("Can't load data from " + variationDataUrl);
+                                return;
+                            }
+                            resolve(variationData);
+                        });
+                    });
+
+        variationDataPromise.then(
+            result => {gvd = result; gs.renderVariations(result); $(".variation-table").bootstrapTable('load', result)},
+            error => alert(error)
+        );
+    }
+
+    $(document).on("focusin", ".tabbable-rect", function() {
+        var index = gs.bisectVariation(gs.vd, $(this).attr("data-x"));
+        var tableData = gs.vd.slice(index, index+1);
+        console.log(tableData);
+        $(".variation-table").bootstrapTable('load', tableData);
+    });
+
+    
+      
+
+
+</script>
+               	</div>
+        	</div>
+	</div>
+    
+     
+      </div>
+    </div>
+    <a href="https://github.com/google/material-design-lite/blob/mdl-1.x/templates/android-dot-com/" target="_blank" id="view-source" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-color--accent mdl-color-text--accent-contrast">New Patient</a>
+    <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+</body>
+</html>

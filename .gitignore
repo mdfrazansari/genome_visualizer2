@@ -4,4 +4,6 @@ __pycache__
 mtp2
 db.sqlite3
 /static
+/media
+/logs
 .DS_Store

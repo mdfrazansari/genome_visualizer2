@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_beat',
+    'django_celery_results',
     'gv',
 ]
 
@@ -139,9 +141,34 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+LOG_ROOT = os.path.join(BASE_DIR, 'logs')
 
 LOGIN_REDIRECT_URL = '/'
 
 # Message broker
 
 CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_RESULT_BACKEND='django-db'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+#            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': LOG_ROOT + '/debug.log',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+#            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
