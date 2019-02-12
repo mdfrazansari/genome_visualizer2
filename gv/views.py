@@ -98,3 +98,9 @@ def getVariationAllDetails(request, pk, chrom):
     vcf = gn.VCF(gn.STANDARD_GENOME_PATH + "vcf.vcf")
     data = vcf.getVariationAllDetails(chrom)
     return HttpResponse(data.to_json(orient='records'))
+    
+def getGeneData(request, chrom):
+    gene_file = os.path.join(os.path.dirname(__file__), 'data/gene_location.csv')
+    df = pd.read_csv(gene_file)
+    df = df.sort_values("start")
+    return HttpResponse(df[df.chrom == chrom].to_json(orient='records'))

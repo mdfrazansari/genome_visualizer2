@@ -18,4 +18,6 @@ urlpatterns = [
     path('getPQArmData/<str:chrom>', views.getPQArmDataChrom, name='getPQArmDataChrom'),
     path('getCensusData/<str:chrom>', views.getCensusData, name='getCensusData'),
     path('getVariationAllDetails/<int:pk>/<str:chrom>', views.getVariationAllDetails, name='getVariationAllDetails'),
+    path('getGeneData/<str:chrom>', views.getGeneData, name='getGeneData'),
+
 ]

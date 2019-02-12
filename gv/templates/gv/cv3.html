@@ -303,13 +303,15 @@ class GenomeSlider {
         }
 
         this.svgSelector = ".svg-" + idSuffix;
+        alert(container.width());
+        var initialWidth = container.width() - this.config.margin.left - this.config.margin.right - this.config.extraPaddingRight;
         this.idSuffix = idSuffix;
         var svgCreator = "<div class='row'><div class='col-md-11'><svg class='scaling-svg svg-" + idSuffix + "' height='120' width='110'>" +
                 "<defs>" +
                     "<clipPath id='mask-" + idSuffix +"'>" +
-                      "<rect x='0' y='0' width='" + this.getWidth() + "' height='" + (this.getHeight() + this.config.margin.top) + "' />"+
+                      "<rect x='0' y='0' width='" + 1180 + "' height='" + (this.getHeight() + this.config.margin.top) + "' />"+
                     "</clipPath>" +
-                "</defs></svg></div><div class='col-md-1'><button tabindex=-1 class='btn-" + idSuffix +"' style='color: blue; margin-top:" + this.getHeight() +"px'><i class='fas fa-search-plus'></i></button></div></div>";
+                "</defs></svg></div><div class='col-md-1'><label class='btn-" + idSuffix + " mdl-button mdl-js-button mdl-button--icon'><i class='material-icons'>zoom_in</i></label></div></div>";
         container.append($(svgCreator));
         this.container = container;
         this.svg = d3.select(this.svgSelector);
@@ -492,6 +494,35 @@ class GenomeSlider {
               .attr("width", function(d) {return x(d["Genome Location"].split(":")[1].split("-")[1]) - x(d["Genome Location"].split(":")[1].split("-")[0]);})
               .attr("fill", "cyan");
     }
+    
+    renderGene(geneData) {
+        this.gd = geneData;
+        var census_g = this.g.append("g").attr('class', "gene");
+        var x = this.x;
+        var y = this.y;
+        var census_bands = census_g.selectAll("rect")
+              .data(this.gd)
+              .enter()
+              .append("rect")
+              .attr("class", "bar")
+              .attr("x",  function(d) { return x(d["start"])})
+              .attr("y", function(d, i) { return y(d["chrom"]) + y.bandwidth()/4; })
+              .attr("height", function(d, i) {return  y.bandwidth()/2; })
+              .attr("width", function(d) {return x(d["end"]) - x(d["start"]);})
+              //.attr("width", 20000)
+              .attr("fill", function(d, i) {console.log("x=" + x(d["start"]));return d3.schemeCategory20[i%19]});
+
+        var census_bands = census_g.selectAll("recttext")
+              .data(this.gd)
+              .enter()
+              .append("text")
+              .attr("class", "bar")
+              .attr("x",  function(d) { return x(d["start"])})
+              .attr("y", function(d, i) { return y(d["chrom"]) + y.bandwidth()/4; })
+              .attr("dy", function(d, i) {return  y.bandwidth()/2; })
+              .text(function(d, i) {return d["geneSymbol"]; })
+              .attr("fill", function(d, i) {return d3.schemeCategory10[i%2]});
+    }
 
     addChildLevel() {
         this.gs = new GenomeSlider(this.container, this.idSuffix+1)
@@ -503,6 +534,7 @@ class GenomeSlider {
             this.gs.setYDomain(this.y.domain());
             this.gs.renderCytoBand(this.cbd);
             this.gs.renderVariations(this.vd);
+            this.gs.renderGene(this.gd);
             this.gs.renderCensus(this.cd);
         }
     }
@@ -514,12 +546,13 @@ class GenomeSlider {
             this.gs.setYDomain(this.y.domain());
             this.gs.renderCytoBand(this.cbd);
             this.gs.renderVariations(this.vd);
+            this.gs.renderGene(this.gd);
             this.gs.renderCensus(this.cd);
             //this.gs.renderPQBand(this.pqd);
         } else {
             var selection = d3.event.selection.map(this.x.invert, this.x)
             var tableData = this.vd.slice(this.bisectVariation(this.vd, selection[0]), this.bisectVariation(this.vd, selection[1]));
-            $(".variation-table").bootstrapTable('load', tableData);
+           //change $(".variation-table").bootstrapTable('load', tableData);
         }
     }
         
@@ -572,7 +605,7 @@ class GenomeSlider {
                     });
 
         cytoBandDataPromise.then(
-            result => {gs.renderCytoBand(result); loadCensusData()},
+            result => {gs.renderCytoBand(result); loadGeneData()},
             error => alert(error)
         );
     }
@@ -594,6 +627,24 @@ class GenomeSlider {
             error => alert(error)
         );
     }
+    
+    function loadGeneData() {
+        let geneDataPromise = new Promise(function(resolve, reject) {
+                        var geneDataUrl = "/getGeneData/{{chrom}}";
+                        d3.json(geneDataUrl, function(error, data) {
+                            if (error) {
+                                reject("Can't load data from " + geneDataUrl);
+                                return;
+                            }
+                            resolve(data);
+                        });
+                    });
+
+        geneDataPromise.then(
+            result => {gs.renderGene(result); loadCensusData()},
+            error => alert(error)
+        );
+    }
 
     function loadVariationData() {
         let variationDataPromise = new Promise(function(resolve, reject) {
@@ -608,7 +659,9 @@ class GenomeSlider {
                     });
 
         variationDataPromise.then(
-            result => {gvd = result; gs.renderVariations(result); $(".variation-table").bootstrapTable('load', result)},
+            result => {gvd = result; gs.renderVariations(result); 
+                       //change$(".variation-table").bootstrapTable('load', result)
+                       },
             error => alert(error)
         );
     }
