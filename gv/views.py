@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, HttpResponse
+from django.conf import settings
 import pandas as pd
 import os
 from django.shortcuts import redirect
@@ -74,6 +75,12 @@ def cv3(request, pk, chrom):
                'chrom': chrom}
     return render(request, "gv/cv3.html", context)
 
+def cv4(request, pk, chrom):
+    patient = get_object_or_404(Patient, pk=pk)
+    context = {'patient': patient,
+               'chrom': chrom}
+    return render(request, "gv/cv4.html", context)
+
 
 def getPQArmDataChrom(request, chrom):
     cytobandsfile = os.path.join(os.path.dirname(__file__), 'data/cytobands.csv')
@@ -95,7 +102,8 @@ def getCensusData(request, chrom):
 
 
 def getVariationAllDetails(request, pk, chrom):
-    vcf = gn.VCF(gn.STANDARD_GENOME_PATH + "vcf.vcf")
+    patient = Patient.objects.filter(pk=pk).last()
+    vcf = gn.VCF(settings.MEDIA_ROOT + "/" +patient.vcf_file.url)
     data = vcf.getVariationAllDetails(chrom)
     return HttpResponse(data.to_json(orient='records'))
     

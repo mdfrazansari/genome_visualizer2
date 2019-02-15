@@ -295,13 +295,14 @@
 
 
 class GenomeSlider {
-    constructor(container, idSuffix, pqArmData) {
+    constructor(container, idSuffix, data) {
         this.config = {
             margin: {top: 20, right: 20, bottom: 30, left: 40},
             extraPaddingRight: 100,
             brushWidth: 200,
         }
 
+        this.data = data;
         this.svgSelector = ".svg-" + idSuffix;
         var initialWidth = container.width() - this.config.margin.left - this.config.margin.right - this.config.extraPaddingRight;
         this.idSuffix = idSuffix;
@@ -325,6 +326,10 @@ class GenomeSlider {
             .on("start brush", () => this.brushed(this));
         this.bisectVariation = d3.bisector(function(d) { return d.POS; }).left;
         $(".btn-"+idSuffix).click(() => this.test(this));
+        this.setXDomain([0, d3.max(data.pqArmData, function(d) { return d.chromEnd_y; })]);
+        this.setYDomain(data.pqArmData.map(function(d) { return d.chrom; }));
+        this.renderLayers();
+       // loadCytoBandData();
         
     }
     test() {
@@ -354,15 +359,14 @@ class GenomeSlider {
           .call(d3.axisLeft(this.y));
     }
 
-    renderPQBand(data) {
-        this.pqd = data;
+    renderPQBand() {
         var p_arm_g = this.g.append("g").attr('class', "p-arm");
         var q_arm_g = this.g.append("g").attr('class', "q-arm");  
         var x = this.x;
         var y = this.y; 
 
         var p_arms = p_arm_g.selectAll("line")
-            .data(data)
+            .data(this.data.pqArmData)
             .enter()
             .append("line")
             .attr("class", "bar")
@@ -382,7 +386,7 @@ class GenomeSlider {
             .attr("x2", function(d) {return x(d.chromEnd_x) - y.bandwidth()/2});
 
         var q_arms = q_arm_g.selectAll("line")
-            .data(data)
+            .data(this.data.pqArmData)
             .enter()
             .append("line")
             .attr("class", "bar")
@@ -401,13 +405,12 @@ class GenomeSlider {
             .attr("x2", function(d) {return x(d.chromEnd_y) - y.bandwidth()/2});
     }
 
-    renderCytoBand(data) {
-        this.cbd = data;
+    renderCytoBand() {
         var bands_g = this.g.append("g").attr('class', "bands");
         var x = this.x;
         var y = this.y;
         var bands = bands_g.selectAll("rect")
-              .data(data)
+              .data(this.data.cytoBandData)
               .enter()
               .append("rect")
               .attr("class", "bar")
@@ -437,13 +440,13 @@ class GenomeSlider {
               });
     }
 
-    renderVariations(variationData) {
-        this.vd = variationData;
+    renderVariations() {
+        
         var x = this.x;
         var y =this.y;
         var variations_g = this.g.append("g").attr("class", "variations");
         variations_g.selectAll("circle")
-        .data(variationData)
+        .data(this.data.variationData)
         .enter()
         .append("rect")
         .attr("class", "tabbable-rect")
@@ -456,7 +459,7 @@ class GenomeSlider {
         .attr("fill", "black");
 
         var variation_count_g = this.g.append("g").attr("class", "variation-count");
-        var count = this.bisectVariation(this.vd, x.domain()[1]) - this.bisectVariation(this.vd, x.domain()[0]);
+        var count = this.bisectVariation(this.data.variationData, x.domain()[1]) - this.bisectVariation(this.data.variationData, x.domain()[0]);
         variation_count_g.append("text")
         .attr("x", this.getWidth()-100)
         .attr("y", -y.bandwidth()/2 - 10)
@@ -478,13 +481,12 @@ class GenomeSlider {
           .on("mousedown touchstart", null); // Recenter before brushing.
     }
 
-    renderCensus(censusData) {
-        this.cd = censusData;
+    renderCensus() {
         var census_g = this.g.append("g").attr('class', "census");
         var x = this.x;
         var y = this.y;
         var census_bands = census_g.selectAll("rect")
-              .data(this.cd)
+              .data(this.data.censusData)
               .enter()
               .append("rect")
               .attr("class", "bar")
@@ -495,13 +497,13 @@ class GenomeSlider {
               .attr("fill", "cyan");
     }
     
-    renderGene(geneData) {
-        this.gd = geneData;
+    renderGene() {
+        
         var census_g = this.g.append("g").attr('class', "gene");
         var x = this.x;
         var y = this.y;
         var census_bands = census_g.selectAll("rect")
-              .data(this.gd)
+              .data(this.data.geneData)
               .enter()
               .append("rect")
               .attr("class", "bar")
@@ -510,10 +512,10 @@ class GenomeSlider {
               .attr("height", function(d, i) {return  y.bandwidth()/2; })
               .attr("width", function(d) {return x(d["end"]) - x(d["start"]);})
               //.attr("width", 20000)
-              .attr("fill", function(d, i) {console.log("x=" + x(d["start"]));return d3.schemeCategory20[i%19]});
+              .attr("fill", function(d, i) {/*console.log("x=" + x(d["start"]));*/return d3.schemeCategory20[i%19]});
 
         var census_bands = census_g.selectAll("recttext")
-              .data(this.gd)
+              .data(this.data.geneData)
               .enter()
               .append("text")
               .attr("class", "bar")
@@ -525,17 +527,14 @@ class GenomeSlider {
     }
 
     addChildLevel() {
-        this.gs = new GenomeSlider(this.container, this.idSuffix+1)
+        this.gs = new GenomeSlider(this.container, this.idSuffix+1, this.data)
         if(this.idSuffix != 1) {
             this.gs.empty();
             var x = parseInt($(".selection", $(this.svgSelector)).attr("x"));
             var y = parseInt($(".selection", $(this.svgSelector)).attr("width"));
             this.gs.setXDomain([x, x+y].map(this.x.invert, this.x));
             this.gs.setYDomain(this.y.domain());
-            this.gs.renderCytoBand(this.cbd);
-            this.gs.renderVariations(this.vd);
-            this.gs.renderGene(this.gd);
-            this.gs.renderCensus(this.cd);
+            this.gs.renderLayers();
         }
     }
 
@@ -544,127 +543,67 @@ class GenomeSlider {
             this.gs.empty();
             this.gs.setXDomain(d3.event.selection.map(this.x.invert, this.x));
             this.gs.setYDomain(this.y.domain());
-            this.gs.renderCytoBand(this.cbd);
-            this.gs.renderVariations(this.vd);
-            this.gs.renderGene(this.gd);
-            this.gs.renderCensus(this.cd);
-            //this.gs.renderPQBand(this.pqd);
+            this.gs.renderLayers();
         } else {
             var selection = d3.event.selection.map(this.x.invert, this.x)
-            var tableData = this.vd.slice(this.bisectVariation(this.vd, selection[0]), this.bisectVariation(this.vd, selection[1]));
+            var tableData = this.data.variationData.slice(this.bisectVariation(this.data.variationData, selection[0]), this.bisectVariation(this.data.variationData, selection[1]));
            //change $(".variation-table").bootstrapTable('load', tableData);
         }
     }
+    
+    renderLayers() {
+        this.renderPQBand();
+        this.renderCytoBand();
+        this.renderGene();
+        this.renderCensus();
+        this.renderVariations();
+    }
         
     getWidth() {
-           return container.width() - this.config.margin.left - this.config.margin.right - this.config.extraPaddingRight;
+           return this.container.width() - this.config.margin.left - this.config.margin.right - this.config.extraPaddingRight;
     }
 
     getHeight() {
            return 80;//container.height() - this.config.margin.top - this.config.margin.bottom;
     }
 }
-    var container = $('.scaling-svg-container');
-    gs = new GenomeSlider(container, 1);
-    loadPQArmData();
-    gs.addChildLevel();
-    var gvd;
-
-    function loadPQArmData() {
-        let pqArmDataPromise = new Promise(function(resolve, reject) {
-                        var pqDataUrl = "/getPQArmData/{{chrom}}";
-                        d3.json(pqDataUrl, function(error, data) {
-                            if (error) {
-                                reject("Can't load data from " + pqDataUrl);
-                                return;
-                            }
-                            resolve(data);
-                        });
-                    });
-
-        pqArmDataPromise.then(
-            result => {
-                gs.setXDomain([0, d3.max(result, function(d) { return d.chromEnd_y; })]);
-                gs.setYDomain(result.map(function(d) { return d.chrom; }));
-                gs.renderPQBand(result);
-                loadCytoBandData();},
-            error => alert(error)
-        );
-    }
-
-    function loadCytoBandData() {
-        let cytoBandDataPromise = new Promise(function(resolve, reject) {
-                        var cytoBandDataUrl = "/getCytoBand/{{chrom}}";
-                        d3.json(cytoBandDataUrl, function(error, data) {
-                            if (error) {
-                                reject("Can't load data from " + cytoBandDataUrl);
-                                return;
-                            }
-                            resolve(data);
-                        });
-                    });
-
-        cytoBandDataPromise.then(
-            result => {gs.renderCytoBand(result); loadGeneData()},
-            error => alert(error)
-        );
-    }
-
-    function loadCensusData() {
-        let censusDataPromise = new Promise(function(resolve, reject) {
-                        var censusDataUrl = "/getCensusData/{{chrom}}";
-                        d3.json(censusDataUrl, function(error, data) {
-                            if (error) {
-                                reject("Can't load data from " + censusDataUrl);
-                                return;
-                            }
-                            resolve(data);
-                        });
-                    });
-
-        censusDataPromise.then(
-            result => {gs.renderCensus(result); loadVariationData()},
-            error => alert(error)
-        );
+    
+    loaded_data = {}
+    
+    var pqArmData = 0, cytoBandData = 0, censusData = 0, variationData = 0, geneData = 0;
+    
+    function loadData(key, from_url, into_var) {
+        let dataPromise = new Promise(function(resolve, reject) {
+            d3.json(from_url, function(error, data) {
+                if (error) {
+                    reject ("Can't load data from " + from_url);
+                    return;
+                }
+                resolve(data);
+            });
+        });
+       
+       dataPromise.then(
+           result => {
+               loaded_data[key] = result;
+               displayGraph(loaded_data);
+        }); 
     }
     
-    function loadGeneData() {
-        let geneDataPromise = new Promise(function(resolve, reject) {
-                        var geneDataUrl = "/getGeneData/{{chrom}}";
-                        d3.json(geneDataUrl, function(error, data) {
-                            if (error) {
-                                reject("Can't load data from " + geneDataUrl);
-                                return;
-                            }
-                            resolve(data);
-                        });
-                    });
-
-        geneDataPromise.then(
-            result => {gs.renderGene(result); loadCensusData()},
-            error => alert(error)
-        );
+    loadData("pqArmData", "/getPQArmData/{{chrom}}", pqArmData);
+    loadData("cytoBandData", "/getCytoBand/{{chrom}}", cytoBandData);
+    loadData("censusData", "/getCensusData/{{chrom}}", censusData);
+    loadData("geneData", "/getGeneData/{{chrom}}", geneData);
+    loadData("variationData", "/getVariationAllDetails/{{patient.pk}}/{{chrom}}", variationData);
+    
+    function displayGraph(data) {
+        if (Object.keys(data).length ==5) {
+            var container = $('.scaling-svg-container');
+            gs = new GenomeSlider(container, 1, data);
+            gs.addChildLevel();
+        }
     }
-
-    function loadVariationData() {
-        let variationDataPromise = new Promise(function(resolve, reject) {
-                        var variationDataUrl = "/getVariationAllDetails/{{patient.pk}}/{{chrom}}";
-                        d3.json(variationDataUrl, function(error, variationData) {
-                            if (error) {
-                                reject("Can't load data from " + variationDataUrl);
-                                return;
-                            }
-                            resolve(variationData);
-                        });
-                    });
-
-        variationDataPromise.then(
-            result => {gvd = result; gs.renderVariations(result); 
-                       //change$(".variation-table").bootstrapTable('load', result)
-                       },
-            error => alert(error)
-        );
-    }
+    
 
     $(document).on("focusin", ".tabbable-rect", function() {
         var index = gs.bisectVariation(gs.vd, $(this).attr("data-x"));

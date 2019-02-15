@@ -19,5 +19,7 @@ urlpatterns = [
     path('getCensusData/<str:chrom>', views.getCensusData, name='getCensusData'),
     path('getVariationAllDetails/<int:pk>/<str:chrom>', views.getVariationAllDetails, name='getVariationAllDetails'),
     path('getGeneData/<str:chrom>', views.getGeneData, name='getGeneData'),
+    
+    path('cv4/<int:pk>/<str:chrom>', views.cv4, name='cv4'),
 
 ]
