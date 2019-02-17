@@ -7,6 +7,8 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>Genome Visualizer</title>
+        <link href={% static "/bootstrap/css/bootstrap.css" %} rel="stylesheet" type="text/css"/>
+        <link href={% static "/bootstrap/css/bootstrap-table.css" %} rel="stylesheet" type="text/css"/>
         <link rel="stylesheet" href="{% static 'mdl/material.min.css' %}">
         <script src="{% static 'mdl/material.min.js' %}"></script>
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -107,20 +109,23 @@
           Genome Visualizer
         </span>
         <nav class="mdl-navigation">
-          <a class="mdl-navigation__link" href="index.htm">Dashboard</a>
-          <a class="mdl-navigation__link" href="pending.htm">Pending</a>
-          <a class="mdl-navigation__link" href="analyzed.htm">Analyzed</a>
-          <a class="mdl-navigation__link" href="closed.htm">Closed</a>
+          <a class="mdl-navigation__link" href="#">Cytobands</a>
+          <a class="mdl-navigation__link" href="#">P arm</a>
+          <a class="mdl-navigation__link" href="">Q arm</a>
           <div class="android-drawer-separator"></div>
+          <div class="mdl-tooltip" data-mdl-for="tt3">
+            Upload <strong>file.zip</strong>
+          </div>
         </nav>
       </div>
       <div class="android-content mdl-layout__content">
         <a name="top"></a>
             <div>
 <div class="container-fluid">
+<span class="mdl-tooltip" for="xml">eXtensible Markup Language</span>
       <div class="row">
         <div class="col-md-10" >
-            <div class="scaling-svg-container" height="100">  
+            <div class="scaling-svg-container pt-4" height="100">  
             </div>
         </div>
         <div class="col-md-2">
@@ -172,7 +177,15 @@
         </div>
       </div>
       <div class="row">
-        <div class="col table-responsive-sm">
+        <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+          <div class="mdl-tabs__tab-bar">
+              <a href="#variations-panel" class="mdl-tabs__tab is-active" >Variations<span class="mdl-badge variations-badge" data-badge="0"></span></a>
+              <a href="#cytobands-panel" class="mdl-tabs__tab">Cytobands<span class="mdl-badge cytobands-badge" data-badge="0"></a>
+              <a href="#genes-panel" class="mdl-tabs__tab">Genes<span class="mdl-badge genes-badge" data-badge="0"></a>
+          </div>
+
+          <div class="mdl-tabs__panel is-active" id="variations-panel">
+            <div class="col table-responsive-sm">
             <table data-toggle="table" class="table table-dark table-striped table-sm variation-table" data-search="true"
                 data-search-align="left"
                 data-search="true" data-show-refresh="true"
@@ -284,12 +297,69 @@
                 </thead>
             </table>
           </div>
+          </div>
+          <div class="mdl-tabs__panel" id="cytobands-panel">
+            <div class="col table-responsive-sm">
+            <table data-toggle="table" class="table table-dark table-striped table-sm cytobands-table" data-search="true"
+                data-search-align="left"
+                data-search="true" data-show-refresh="true"
+                data-show-columns="true"
+                data-detail-view="true" data-minimum-count-columns="2"
+                data-pagination="true" data-id-field="id"
+                data-page-list="[10, 25, 50, 100, ALL]">
+                <thead>
+                    <tr>
+                        <th data-field="chrom">CHROM</th>
+                        <th data-field="name" data-sortable="true">Name</th>
+                        <th data-field="chromStart" data-sortable="true">Start</th>
+                        <th data-field="chromEnd" data-sortable="true">End</th>
+                        <th data-field="gieStain" data-sortable="true">Stain</th>
+
+                        
+                    </tr>
+                </thead>
+            </table>
+          </div>
+          </div>
+          <div class="mdl-tabs__panel" id="genes-panel">
+            <div class="col table-responsive-sm">
+            <table data-toggle="table" class="table table-dark table-striped table-sm gene-table" data-search="true"
+                data-search-align="left"
+                data-search="true" data-show-refresh="true"
+                data-show-columns="true"
+                data-detail-view="true" data-minimum-count-columns="2"
+                data-pagination="true" data-id-field="id"
+                data-page-list="[10, 25, 50, 100, ALL]">
+                <thead>
+                    <tr>
+                        <th data-field="chrom">CHROM</th>
+                        <th data-field="geneSymbol" data-sortable="true">Gene Symbol</th>
+                        <th data-field="start" data-sortable="true">Start</th>
+                        <th data-field="end" data-sortable="true">End</th>
+                        <th data-field="description" data-sortable="true">Description</th>
+
+                        
+                    </tr>
+                </thead>
+            </table>
+          </div>
+          </div>
+
+          </div>
         </div>
+      </div>
+      <div class="row">
+        
+      </div>
     </div>
 
     <!-- Graphs -->
     <script src={% static "/d3/d3.v4.min.js" %} type="text/javascript"></script>
     <script src={% static "/jquery/jquery-3.3.1.js" %} type="text/javascript"></script>
+    <script src={% static "/bootstrap/js/popper.min.js" %} type="text/javascript"></script>
+    <script src={% static "/bootstrap/js/bootstrap.min.js" %} type="text/javascript"></script>
+    <script src={% static "/bootstrap/js/bootstrap-table.min.js" %} type="text/javascript"></script>
+    <script src={% static "/jquery-ui/jquery-ui.min.js" %} type="text/javascript"></script>
     
 <script>
 
@@ -306,12 +376,12 @@ class GenomeSlider {
         this.svgSelector = ".svg-" + idSuffix;
         var initialWidth = container.width() - this.config.margin.left - this.config.margin.right - this.config.extraPaddingRight;
         this.idSuffix = idSuffix;
-        var svgCreator = "<div class='row'><div class='col-md-11'><svg class='scaling-svg svg-" + idSuffix + "' height='120' width='110'>" +
+        var svgCreator = "<div class='row'><div class='col-md-11'><div class='position-absolute tooltip-holder'><div class='bg-info d-inline-block variation-tooltip gs-tooltip-" + idSuffix + " data-tooltip position-absolute' data-toggle='tooltip' data-placement='top' title='data'></div></div><svg class='scaling-svg svg-" + idSuffix + "' id='svg-" + idSuffix +"' height='120' width='110'>" +
                 "<defs>" +
                     "<clipPath id='mask-" + idSuffix +"'>" +
                       "<rect x='0' y='0' width='" + initialWidth + "' height='" + (this.getHeight() + this.config.margin.top) + "' />"+
                     "</clipPath>" +
-                "</defs></svg></div><div class='col-md-1'><label class='btn-" + idSuffix + " mdl-button mdl-js-button mdl-button--icon'><i class='material-icons'>zoom_in</i></label></div></div>";
+                "</defs></svg></div><div class='col-md-1 pt-5'><label class='btn-zoom-in-" + idSuffix + " mdl-button mdl-js-button mdl-button--icon'><i class='material-icons'>zoom_in</i></label><label class='btn-remove-" + idSuffix + " mdl-button mdl-js-button mdl-button--icon'><i class='material-icons'>close</i></label></div></div>";
         container.append($(svgCreator));
         this.container = container;
         this.svg = d3.select(this.svgSelector);
@@ -325,21 +395,37 @@ class GenomeSlider {
             .extent([[0, 0], [this.getWidth(), this.getHeight()]])
             .on("start brush", () => this.brushed(this));
         this.bisectVariation = d3.bisector(function(d) { return d.POS; }).left;
-        $(".btn-"+idSuffix).click(() => this.test(this));
-        this.setXDomain([0, d3.max(data.pqArmData, function(d) { return d.chromEnd_y; })]);
-        this.setYDomain(data.pqArmData.map(function(d) { return d.chrom; }));
-        this.renderLayers();
+        this.bisectCytobands = d3.bisector(function(d) { return d.chromStart; }).left;
+        this.bisectGenes = d3.bisector(function(d) { return d.start; }).left;
+        $(".btn-zoom-in-"+idSuffix).click(() => this.zoom_in_clicked(this));
+        $(".btn-remove-"+idSuffix).click(() => this.remove_clicked(this));
+        
        // loadCytoBandData();
         
     }
-    test() {
+    zoom_in_clicked() {
         if(!this.gs) {
             this.addChildLevel();
         }
+        this.highlight_arm();
+    }
+
+    remove_clicked() {
+      console.log(this.gs);
+      if (this.gs) {
+        this.gs.remove_clicked();
+        $('[data-toggle="tooltip"].gs-tooltip-' + this.gs.idSuffix).tooltip('dispose');
+        this.gs.remove();
+        this.gs = null;
+      }
     }
 
     empty() {
         $('.chart', $(this.svgSelector)).empty();
+    }
+
+    remove(){
+       $('.chart', $(this.svgSelector)).closest('.row').remove();
     }
 
     setXDomain(extent) {
@@ -405,6 +491,31 @@ class GenomeSlider {
             .attr("x2", function(d) {return x(d.chromEnd_y) - y.bandwidth()/2});
     }
 
+    highlight_arm(arm_class) {
+        var p_arm_g = this.g.select(".p-arm");
+        var x = this.x;
+        var y = this.y;
+        var x_pos_start = 0;
+
+        console.log(y.bandwidth());
+        var p_arms = p_arm_g.selectAll("temp-overlay")
+            .data(this.data.pqArmData)
+            .enter()
+            .append("rect")
+            .attr("class", "temp-overlay")
+            .attr("id", "xml")
+            .attr("x",  function(d) { return x(x_pos_start)})
+            .attr("y", function(d, i) {return 0; })
+            .attr("height", function(d, i) {return  1.25*y.bandwidth(); })
+            .attr("width", function(d) {return x(d.chromEnd_x);})
+            .attr("fill", function(d) {return "yellow"})
+            .attr("opacity", 0.5);
+    }
+
+    remove_highlight_arm(arm_class) {
+        this.g.find(arm_class).select('.line').attr("stroke", "red");
+    }
+
     renderCytoBand() {
         var bands_g = this.g.append("g").attr('class', "bands");
         var x = this.x;
@@ -413,7 +524,7 @@ class GenomeSlider {
               .data(this.data.cytoBandData)
               .enter()
               .append("rect")
-              .attr("class", "bar")
+              .attr("class", "bar tabbable-rect tabbable-cytobands")
               .attr("x",  function(d) { return x(d.chromStart)})
               .attr("y", function(d, i) {return y(d.chrom) + y.bandwidth()/4; })
               .attr("height", function(d, i) {return  y.bandwidth()/2; })
@@ -449,7 +560,7 @@ class GenomeSlider {
         .data(this.data.variationData)
         .enter()
         .append("rect")
-        .attr("class", "tabbable-rect")
+        .attr("class", "tabbable-rect tabbable-variations")
         .attr("y", function(d) {return (y(d.CHROM));})
         .attr("x", function(d) {return x(d.POS)})
         .attr("data-x", function(d) {return d.POS})
@@ -528,14 +639,14 @@ class GenomeSlider {
 
     addChildLevel() {
         this.gs = new GenomeSlider(this.container, this.idSuffix+1, this.data)
-        if(this.idSuffix != 1) {
+       // if(this.idSuffix != 1) {
             this.gs.empty();
             var x = parseInt($(".selection", $(this.svgSelector)).attr("x"));
             var y = parseInt($(".selection", $(this.svgSelector)).attr("width"));
             this.gs.setXDomain([x, x+y].map(this.x.invert, this.x));
             this.gs.setYDomain(this.y.domain());
             this.gs.renderLayers();
-        }
+        //}
     }
 
     brushed(self) {
@@ -546,8 +657,15 @@ class GenomeSlider {
             this.gs.renderLayers();
         } else {
             var selection = d3.event.selection.map(this.x.invert, this.x)
-            var tableData = this.data.variationData.slice(this.bisectVariation(this.data.variationData, selection[0]), this.bisectVariation(this.data.variationData, selection[1]));
-           //change $(".variation-table").bootstrapTable('load', tableData);
+            var variationData = this.data.variationData.slice(this.bisectVariation(this.data.variationData, selection[0]), this.bisectVariation(this.data.variationData, selection[1]));
+            var cytobandsData = this.data.cytoBandData.slice(this.bisectCytobands(this.data.cytoBandData, selection[0]), this.bisectCytobands(this.data.cytoBandData, selection[1]));
+            var geneData = this.data.geneData.slice(this.bisectGenes(this.data.geneData, selection[0]), this.bisectGenes(this.data.geneData, selection[1]));
+           $('.variations-badge').attr('data-badge', variationData.length);
+           $('.cytobands-badge').attr('data-badge', cytobandsData.length);
+           $('.genes-badge').attr('data-badge', geneData.length);
+           $(".variation-table").bootstrapTable('load', variationData);
+           $(".cytobands-table").bootstrapTable('load', cytobandsData);
+           $(".gene-table").bootstrapTable('load', geneData);
         }
     }
     
@@ -557,6 +675,7 @@ class GenomeSlider {
         this.renderGene();
         this.renderCensus();
         this.renderVariations();
+        this.showTooltip();
     }
         
     getWidth() {
@@ -565,6 +684,18 @@ class GenomeSlider {
 
     getHeight() {
            return 80;//container.height() - this.config.margin.top - this.config.margin.bottom;
+    }
+
+    showTooltip(type, data) {
+      if (type=='variations') {
+        $('[data-toggle="tooltip"].variation-tooltip').tooltip('hide');
+        $('[data-toggle="tooltip"].gs-tooltip-' + this.idSuffix).tooltip('show');
+        $('[data-toggle="tooltip"].gs-tooltip-' + this.idSuffix).tooltip('hide');
+        $('[data-toggle="tooltip"].gs-tooltip-' + this.idSuffix).css("top", (this.config.margin.top + this.y.bandwidth()/8))
+        .css("left", this.x(data.POS) + this.config.margin.left)
+        .attr("data-original-title", "[" + data.REF + "->" + data.ALT_1 +"] " + data.TYPE_1 + " @ " + data.POS).tooltip('show');
+      }
+      
     }
 }
     
@@ -600,18 +731,56 @@ class GenomeSlider {
         if (Object.keys(data).length ==5) {
             var container = $('.scaling-svg-container');
             gs = new GenomeSlider(container, 1, data);
+            gs.setXDomain([0, d3.max(data.pqArmData, function(d) { return d.chromEnd_y; })]);
+            gs.setYDomain(data.pqArmData.map(function(d) { return d.chrom; }));
+            gs.renderLayers();
             gs.addChildLevel();
         }
     }
+
+
     
 
     $(document).on("focusin", ".tabbable-rect", function() {
-        var index = gs.bisectVariation(gs.vd, $(this).attr("data-x"));
-        var tableData = gs.vd.slice(index, index+1);
-        console.log(tableData);
+        console.log("caoiu");
+        var svg_id = $(this).closest('svg').attr('id').split('-')[1];
+        var index = gs.bisectVariation(gs.data.variationData, $(this).attr("data-x"));
+        var tableData = gs.data.variationData.slice(index, index+1);
+        getGenomeSliderById(gs, svg_id).showTooltip('variations', (tableData[0]));
         $(".variation-table").bootstrapTable('load', tableData);
+
     });
 
+    $(document).on("keydown", function(event) {
+        console.log(event);
+        if (event.keyCode == 39) {
+          $('.tabbable-rect.tabbable-variations').attr('tabindex', -1);
+          $('.tabbable-rect.tabbable-cytobands').each(function(id, e) { $(e).attr('tabindex', id)});
+        }
+    });
+
+    function getLastGenomeSlider(parent) {
+      if (parent.gs)
+        return getLastGenomeSlider(parent.gs);
+      else
+        return parent;
+    }
+
+    function getGenomeSliderById(parent, id){
+      if (parent.idSuffix == id) {
+        return parent;
+      } else if (parent.gs) {
+        return getGenomeSliderById(parent.gs, id);
+      } else {
+        return parent;
+      }
+    }
+
+    $(".variation-table").on('click-row.bs.table', function(event, row, element) {
+        var lastGenomeSlider  = getLastGenomeSlider(gs);
+        lastGenomeSlider.showTooltip('variations', row);
+      
+    })
     
       
 
@@ -626,5 +795,6 @@ class GenomeSlider {
     </div>
     <a href="https://github.com/google/material-design-lite/blob/mdl-1.x/templates/android-dot-com/" target="_blank" id="view-source" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-color--accent mdl-color-text--accent-contrast">New Patient</a>
     <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+
 </body>
 </html>
