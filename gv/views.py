@@ -10,6 +10,7 @@ from . import census as cn
 from . import genome as gn
 from .tasks import create_random_user_accounts
 from .forms import PatientForm
+from django.contrib.auth.decorators import login_required
 
 
 # Create your views here.
@@ -75,6 +76,8 @@ def cv3(request, pk, chrom):
                'chrom': chrom}
     return render(request, "gv/cv3.html", context)
 
+
+@login_required
 def cv4(request, pk, chrom):
     patient = get_object_or_404(Patient, pk=pk)
     context = {'patient': patient,
