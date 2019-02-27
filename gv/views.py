@@ -40,7 +40,7 @@ def index(request):
 def view_vcf(request, pk):
     create_random_user_accounts.delay(8)
     patient = get_object_or_404(Patient, pk=pk)
-    return render(request, 'gv/cv1.html', {'patient': patient})
+    return render(request, 'gv/cv1new.html', {'patient': patient})
 
 
 def getPQArmData(request):
@@ -53,6 +53,14 @@ def getPQArmData(request):
     sorted_key = pqArmData.chrom.apply(lambda x: ('9'+x[3:], x[3:].zfill(2))[x[3:].isdigit()]).sort_values()
     pqArmData = pqArmData.reindex(index=sorted_key.index)
     return HttpResponse(pqArmData.to_json(orient='records'))
+
+def getChromList(request):
+    df = pd.DataFrame(['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6',\
+                         'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12',\
+                         'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18',\
+                         'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY'])
+    
+    return HttpResponse(df.to_json(orient='records'))
 
 
 def getCytoBand(request, chrom):

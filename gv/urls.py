@@ -21,5 +21,7 @@ urlpatterns = [
     path('getGeneData/<str:chrom>', views.getGeneData, name='getGeneData'),
     
     path('cv4/<int:pk>/<str:chrom>', views.cv4, name='cv4'),
+    path('getChromList/', views.getChromList, name='getChromList'),
+    
 
 ]
