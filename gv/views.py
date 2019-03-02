@@ -17,7 +17,10 @@ from django.contrib.auth.decorators import login_required
 
 logger = logging.getLogger(__name__)
 
+
+@login_required
 def index(request):
+    return redirect("/admin/gv/patient/")
     logger.debug("fraz")
     create_random_user_accounts.delay(8)
     if request.method == "POST":
