@@ -7,7 +7,7 @@ from django.utils.html import format_html
 
 
 class patientAdmin(admin.ModelAdmin):
-    actions = ["run_preprocessing"]
+    actions = ["view_patient_variations_summary_action", "run_preprocessing",]
     list_display = [ 'name', 'disease_type', 'remarks', 'creation_date', 'created_by', 'view_variations']
     def run_preprocessing(self, request, queryset):
         print("Pre processing started...")
@@ -18,7 +18,7 @@ class patientAdmin(admin.ModelAdmin):
 
     run_preprocessing.short_description = "Run Preprocessing"
 
-    def view_variations_action(self, request, queryset):
+    def view_patient_variations_summary_action(self, request, queryset):
         print(len(queryset))
         a = serializers.serialize('json', queryset)
         return redirect("/view/" + str(queryset[0].pk))
@@ -79,7 +79,7 @@ class patientAdmin(admin.ModelAdmin):
                 '/cv4/' + str(a.pk) + '/chr2', 'chr2', \
                 '/cv4/' + str(a.pk) + '/chr1', 'chr1', \
         ))
-    view_variations_action.short_description = "View Variations"
+    view_patient_variations_summary_action.short_description = "View Patient's Variations Summary"
 
 
 admin.site.register(Post)
