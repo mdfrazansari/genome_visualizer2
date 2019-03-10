@@ -9,6 +9,20 @@ from django.utils.html import format_html
 class patientAdmin(admin.ModelAdmin):
     actions = ["view_patient_variations_summary_action", "run_preprocessing",]
     list_display = [ 'name', 'disease_type', 'remarks', 'creation_date', 'created_by', 'view_variations']
+    
+    def save_model(self, request, obj, form, change):
+        obj.created_by = request.user
+        obj.save()
+        
+    def get_queryset(self, request):
+        qs = super(patientAdmin, self).get_queryset(request)
+        return qs.filter(created_by=request.user)
+        
+    def has_change_permission(self, request, obj=None):
+        if not obj:
+            return True
+        return obj.created_by == request.user
+
     def run_preprocessing(self, request, queryset):
         print("Pre processing started...")
         print(queryset)
