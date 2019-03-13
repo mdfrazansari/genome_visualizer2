@@ -9,13 +9,33 @@ from .models import Patient
 from . import census as cn
 from . import genome as gn
 from .tasks import create_random_user_accounts
-from .forms import PatientForm
+from .forms import PatientForm, gvUserForm
 from django.contrib.auth.decorators import login_required
 
 
 # Create your views here.
 
 logger = logging.getLogger(__name__)
+
+
+def register(request):
+    if request.method == "POST":
+        form = gvUserForm(request.POST)
+        print(form.is_valid())
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.email = 'mdfraz@iitkgp.ac.in'
+            user.is_superuser=False
+            user.is_staff=True
+            user.save()
+            return redirect('/accounts/login')
+        else:
+            print(form.errors)
+            return render(request, 'registration/register.html', {'form': form})
+    else:
+        form = gvUserForm()
+        return render(request, 'registration/register.html', {'form': form})
+
 
 
 @login_required

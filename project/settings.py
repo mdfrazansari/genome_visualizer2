@@ -150,6 +150,8 @@ LOGIN_REDIRECT_URL = '/'
 
 CELERY_BROKER_URL = 'amqp://localhost'
 CELERY_RESULT_BACKEND='django-db'
+ACCOUNT_ACTIVATION_DAYS=7
+
 
 LOGGING = {
     'version': 1,

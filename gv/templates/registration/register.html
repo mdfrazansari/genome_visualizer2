@@ -11,7 +11,7 @@
 </head>
 
 <style>
-        .util-center {
+    .util-center {
         margin: auto;
         
     }
@@ -47,26 +47,26 @@
     <img class="util-center mdl-color-text--white" src="/static/images/logo2.png " height=70 width=70></img>
 </div>
 <div class="mdl-grid">
-    <h1 class="util-center mdl-color-text--white" style="font-size: 24px; font-weight: 500; line-height: 28px; margin-top: 48px;">Log in to continue to Genome Visualizer</h1>
+    <h1 class="util-center mdl-color-text--white" style="font-size: 24px; font-weight: 500; line-height: 28px; margin-top: 48px;">Create your account</h1>
 </div>
 <div class="mdl-grid">
     
-    <div class="mdl-card mdl-shadow--16dp util-center util-spacing-h--40px" style="min-width:500px;">
+    <div class="mdl-card mdl-shadow--16dp util-center util-spacing-h--40px" style="min-width:900px;">
         <div class="mdl-card__supporting-text mdl-grid">
             {% if form.errors %}
-                <p class="mdl-color-text--accent">Your username and password didn't match. Please try again.</p>
+                <p class="mdl-color-text--accent">Please correct errors</p>
             {% endif %}
 
-            <form method="post" action="{% url 'login' %}" style="width:100%">
+            <form method="post" action="{% url 'register' %}" style="width:100%">
                 {% csrf_token %}
                 <div>
                     <label></label>
                 </div>
-                    <table style="width:100%">
+                    <table>
                     {{form.as_table}}
                     </table>
             
-                    <input style="margin-top:20px; background-color:#0747a6" class="mdl-cell mdl-cell--12-col mdl-button mdl-button--raised mdl-js-button mdl-js-ripple-effect mdl-color-text--white" type="submit" value="login" />
+                    <input style="margin-top:20px; background-color:#0747a6" class="mdl-cell mdl-cell--12-col mdl-button mdl-button--raised mdl-js-button mdl-js-ripple-effect mdl-color-text--white" type="submit" value="register" />
                     <input type="hidden" name="next" value="{{ next }}" />
                 </form>
 
@@ -82,8 +82,9 @@
 $(document).ready(function() {
     $('input:text').addClass('form-control');
     $('input:password').addClass('form-control')
+    $('br').remove();
+    $('.helptext').addClass('text-muted form-muted');
 });
 </script>
-
 </body>
 </html>
