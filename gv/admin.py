@@ -4,6 +4,9 @@ from .tasks import pre_process_vcf
 from django.core import serializers
 from django.shortcuts import redirect
 from django.utils.html import format_html
+from django.contrib.sessions.models import Session
+from django.contrib.auth.models import User
+
 
 
 class patientAdmin(admin.ModelAdmin):
@@ -95,8 +98,16 @@ class patientAdmin(admin.ModelAdmin):
         ))
     view_patient_variations_summary_action.short_description = "View Patient's Variations Summary"
 
+class SessionAdmin(admin.ModelAdmin):
+    def _session_user(self, obj):
+        return User.objects.get(pk=obj.get_decoded()['_auth_user_id'])
+    _session_user.allow_tags = True
+    list_display = ['session_key', '_session_user', 'expire_date']
+    readonly_fields = ['_session_user']
+    exclude = ['session_data']
+    data_hoerarchy = 'expire_date'
 
-admin.site.register(Post)
+admin.site.register(Session, SessionAdmin)
 admin.site.register(Patient, patientAdmin)
 admin.site.register(PatientGenomeVariation)
 admin.site.site_header = "Genome Visualizer Administration"
