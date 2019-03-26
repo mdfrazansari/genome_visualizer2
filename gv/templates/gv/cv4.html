@@ -399,7 +399,12 @@ class GenomeSlider {
         this.bisectGenes = d3.bisector(function(d) { return d.start; }).left;
         $(".btn-zoom-in-"+idSuffix).click(() => this.zoom_in_clicked(this));
         $(".btn-remove-"+idSuffix).click(() => this.remove_clicked(this));
-        
+        this.toRender = { 'pqarm': true,
+                         'cytoband': true,
+                         'gene': true,
+                         'census': false,
+                         'variation': false};
+                         
        // loadCytoBandData();
         
     }
@@ -489,6 +494,28 @@ class GenomeSlider {
           //  .ease(d3.easeLinear)
             //.duration(function(d){return x(d.chromEnd_y)})
             .attr("x2", function(d) {return x(d.chromEnd_y) - y.bandwidth()/2});
+                  
+        var q_text = q_arm_g.selectAll("recttext")
+              .data(this.data.pqArmData)
+              .enter()
+              .append("text")
+              .attr("class", "bar")
+              .attr("x",  function(d) { return x(d.chromEnd_x) + y.bandwidth()/2})
+              .attr("y", function(d, i) { return y(d.chrom) + y.bandwidth()/2; })
+              .attr("dy", function(d, i) {return  y.bandwidth()/2; })
+              .text(function(d, i) {return "Q-arm" })
+              .attr("fill", function(d, i) {return "#fff"});
+
+        var p_text = p_arm_g.selectAll("recttext")
+              .data(this.data.pqArmData)
+              .enter()
+              .append("text")
+              .attr("class", "bar")
+              .attr("x",  function(d) { return x(2000000)})
+              .attr("y", function(d, i) { return y(d.chrom) + y.bandwidth()/2; })
+              .attr("dy", function(d, i) {return  y.bandwidth()/2; })
+              .text(function(d, i) {return "P-arm" })
+              .attr("fill", function(d, i) {return "#fff"});
     }
 
     highlight_arm(arm_class) {
@@ -530,7 +557,6 @@ class GenomeSlider {
               .attr("height", function(d, i) {return  y.bandwidth()/2; })
               .attr("width", function(d) {return x(d.chromEnd) - x(d.chromStart);})
               .attr("fill", function(d) {
-              return "black";
                 if(d.gieStain=='gneg') {//gneg', 'gpos25', 'gpos50', 'gpos75', 'gpos100', 'acen', 'gvar','stalk
                   return "#9d1cb2";
                 } else if (d.gieStain=='gpos25') {
@@ -549,6 +575,16 @@ class GenomeSlider {
                   return "#ec1261";
                 }
               });
+        var cyto_text = bands_g.selectAll("recttext")
+              .data(this.data.cytoBandData)
+              .enter()
+              .append("text")
+              .attr("class", "bar")
+              .attr("x",  function(d) { return x(d.chromStart)})
+              .attr("y", function(d, i) {return y(d.chrom) + y.bandwidth()/6; })
+              .attr("dy", function(d, i) {return  y.bandwidth()/2; })
+              .text(function(d, i) {return d.name })
+              .attr("fill", function(d, i) {return "#fff"});
     }
 
     renderVariations() {
@@ -577,8 +613,6 @@ class GenomeSlider {
         .attr("dy", y.bandwidth())
         .attr("fill", "orange")
         .text(count + " variations");
-        
-        this.renderBrush([0, this.config.brushWidth]);
     }
 
     renderBrush(extent) {
@@ -670,11 +704,23 @@ class GenomeSlider {
     }
     
     renderLayers() {
-        this.renderPQBand();
-        this.renderCytoBand();
-        this.renderGene();
-        this.renderCensus();
-        this.renderVariations();
+        var rdr = this.toRender
+        if (rdr['pqarm']) {
+            this.renderPQBand();
+        }
+        if (rdr['cytoband']) {
+            this.renderCytoBand();
+        }
+        if (rdr['gene']) {
+            this.renderGene();
+        }
+        if (rdr['census']) {
+            this.renderCensus();
+        }
+        if (rdr['variation']) {
+            this.renderVariations();
+        }
+        this.renderBrush([0, this.config.brushWidth]);
         this.showTooltip();
     }
         
