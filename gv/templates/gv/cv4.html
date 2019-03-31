@@ -381,8 +381,26 @@ class GenomeSlider {
                     "<clipPath id='mask-" + idSuffix +"'>" +
                       "<rect x='0' y='0' width='" + initialWidth + "' height='" + (this.getHeight() + this.config.margin.top) + "' />"+
                     "</clipPath>" +
-                "</defs></svg></div><div class='col-md-1 pt-5'><label class='btn-zoom-in-" + idSuffix + " mdl-button mdl-js-button mdl-button--icon'><i class='material-icons'>zoom_in</i></label><label class='btn-remove-" + idSuffix + " mdl-button mdl-js-button mdl-button--icon'><i class='material-icons'>close</i></label></div></div>";
+                "</defs></svg></div><div class='col-md-1 pt-5'><label class='btn-zoom-in-" + idSuffix + " mdl-button mdl-js-button mdl-button--icon'><i class='material-icons'>zoom_in</i></label>" +
+                "<button class='android-more-button mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect' id='menu-" + idSuffix +"'>" +
+                    "<i class='material-icons'>more_vert</i>" +
+                "</button>" +
+                "<ul class='mdl-menu mdl-js-menu mdl-menu--bottom-right mdl-js-ripple-effect custom-ul " +idSuffix + "' for='menu-" + idSuffix +"' id='ul-" + idSuffix + "'>"+
+                    "<li class='mdl-menu__item toggle-pq-" +idSuffix +"'>Toggle PQ Arm</li>" +
+                    "<li class='mdl-menu__item toggle-cyto-" +idSuffix +"'>Toggle Cytobands</li>" +
+                    "<li class='mdl-menu__item toggle-gene-" +idSuffix +"'>Toggle Genes</li>" +
+                    "<li class='mdl-menu__item toggle-census-" +idSuffix +"'>Toggle Census</li>" +
+                    "<li class='mdl-menu__item toggle-variation-" +idSuffix +"'>Toggle Variations</li>" +
+                    "<li class='mdl-menu__item btn-remove-" +idSuffix +"'>Remove Sub Level</li>" +
+                "</ul>" +
+                "</div></div>";
         container.append($(svgCreator));
+        $('.custom-ul').not('.upgraded').each(function(id, e) {
+             $(e).addClass('upgraded');
+            componentHandler.upgradeElement(e);
+         })
+       
+        
         this.container = container;
         this.svg = d3.select(this.svgSelector);
         this.x = d3.scaleLinear().rangeRound([0, this.getWidth()])
@@ -393,12 +411,18 @@ class GenomeSlider {
             .attr("transform", "translate(" + this.config.margin.left + "," + this.config.margin.top + ")");
         this.brush = d3.brushX()
             .extent([[0, 0], [this.getWidth(), this.getHeight()]])
-            .on("start brush", () => this.brushed(this));
+            .on("brush", () => this.brushed(this))
+            .on("end", () => this.brushend(this));
         this.bisectVariation = d3.bisector(function(d) { return d.POS; }).left;
         this.bisectCytobands = d3.bisector(function(d) { return d.chromStart; }).left;
         this.bisectGenes = d3.bisector(function(d) { return d.start; }).left;
         $(".btn-zoom-in-"+idSuffix).click(() => this.zoom_in_clicked(this));
         $(".btn-remove-"+idSuffix).click(() => this.remove_clicked(this));
+        $(".toggle-pq-"+idSuffix).click(() => {this.toRender.pqarm = !this.toRender.pqarm; this.toggleLayer(this, "pqarm")});
+        $(".toggle-cyto-"+idSuffix).click(() => {this.toRender.cytoband = !this.toRender.cytoband; this.toggleLayer(this, "cytoband")});
+        $(".toggle-gene-"+idSuffix).click(() => { this.toRender.gene = !this.toRender.gene; this.toggleLayer(this, "gene")});
+        $(".toggle-census-"+idSuffix).click(() => {this.toRender.census = !this.toRender.census; this.toggleLayer(this, "census")});
+        $(".toggle-variation-"+idSuffix).click(() => {this.toRender.variation = !this.toRender.variation; this.toggleLayer(this, "variation")});
         this.toRender = { 'pqarm': true,
                          'cytoband': true,
                          'gene': true,
@@ -408,6 +432,23 @@ class GenomeSlider {
        // loadCytoBandData();
         
     }
+    
+    toggleLayer(p) {
+        $('.pqarm', $(this.svgSelector)).remove();
+        $('.cytoband', $(this.svgSelector)).remove();
+        $('.gene', $(this.svgSelector)).remove();
+        $('.census', $(this.svgSelector)).remove();
+        $('.variation', $(this.svgSelector)).remove();
+        $('.brush-g', $(this.svgSelector)).remove();
+        this.renderLayers();
+        if (this.gs) {
+            this.gs.toRender = Object.assign({}, this.toRender);
+            this.gs.toggleLayer(p);
+        }
+    }
+    
+    
+    
     zoom_in_clicked() {
         if(!this.gs) {
             this.addChildLevel();
@@ -416,7 +457,7 @@ class GenomeSlider {
     }
 
     remove_clicked() {
-      console.log(this.gs);
+    console.log('rem');
       if (this.gs) {
         this.gs.remove_clicked();
         $('[data-toggle="tooltip"].gs-tooltip-' + this.gs.idSuffix).tooltip('dispose');
@@ -451,8 +492,8 @@ class GenomeSlider {
     }
 
     renderPQBand() {
-        var p_arm_g = this.g.append("g").attr('class', "p-arm");
-        var q_arm_g = this.g.append("g").attr('class', "q-arm");  
+        var p_arm_g = this.g.append("g").attr('class', "pqarm");
+        var q_arm_g = p_arm_g;//this.g.append("g").attr('class', "q-arm");  
         var x = this.x;
         var y = this.y; 
 
@@ -476,7 +517,7 @@ class GenomeSlider {
            // .duration(function(d){return x(d.chromEnd_x)})
             .attr("x2", function(d) {return x(d.chromEnd_x) - y.bandwidth()/2});
 
-        var q_arms = q_arm_g.selectAll("line")
+        var q_arms = q_arm_g.selectAll("line2")
             .data(this.data.pqArmData)
             .enter()
             .append("line")
@@ -524,7 +565,6 @@ class GenomeSlider {
         var y = this.y;
         var x_pos_start = 0;
 
-        console.log(y.bandwidth());
         var p_arms = p_arm_g.selectAll("temp-overlay")
             .data(this.data.pqArmData)
             .enter()
@@ -544,7 +584,7 @@ class GenomeSlider {
     }
 
     renderCytoBand() {
-        var bands_g = this.g.append("g").attr('class', "bands");
+        var bands_g = this.g.append("g").attr('class', "cytoband");
         var x = this.x;
         var y = this.y;
         var bands = bands_g.selectAll("rect")
@@ -591,7 +631,7 @@ class GenomeSlider {
         
         var x = this.x;
         var y =this.y;
-        var variations_g = this.g.append("g").attr("class", "variations");
+        var variations_g = this.g.append("g").attr("class", "variation");
         variations_g.selectAll("circle")
         .data(this.data.variationData)
         .enter()
@@ -657,7 +697,7 @@ class GenomeSlider {
               .attr("height", function(d, i) {return  y.bandwidth()/2; })
               .attr("width", function(d) {return x(d["end"]) - x(d["start"]);})
               //.attr("width", 20000)
-              .attr("fill", function(d, i) {/*console.log("x=" + x(d["start"]));*/return d3.schemeCategory20[i%19]});
+              .attr("fill", function(d, i) {return d3.schemeCategory20[i%19]});
 
         var census_bands = census_g.selectAll("recttext")
               .data(this.data.geneData)
@@ -679,6 +719,7 @@ class GenomeSlider {
             var y = parseInt($(".selection", $(this.svgSelector)).attr("width"));
             this.gs.setXDomain([x, x+y].map(this.x.invert, this.x));
             this.gs.setYDomain(this.y.domain());
+            this.gs.toRender = Object.assign({}, this.toRender);
             this.gs.renderLayers();
         //}
     }
@@ -687,7 +728,32 @@ class GenomeSlider {
         if (this.gs) {
             this.gs.empty();
             this.gs.setXDomain(d3.event.selection.map(this.x.invert, this.x));
-            this.gs.setYDomain(this.y.domain());
+            this.gs.renderBrush([0, this.config.brushWidth]);
+            this.gs.brushed();
+            var gene_state = this.gs.toRender.gene
+            //this.gs.toRender.gene = false;
+            this.rendering = false;
+            this.gs.renderLayers();
+           // this.gs.toRender.gene = gene_state;
+
+        } else {
+            var selection = d3.event.selection.map(this.x.invert, this.x)
+            var variationData = this.data.variationData.slice(this.bisectVariation(this.data.variationData, selection[0]), this.bisectVariation(this.data.variationData, selection[1]));
+            var cytobandsData = this.data.cytoBandData.slice(this.bisectCytobands(this.data.cytoBandData, selection[0]), this.bisectCytobands(this.data.cytoBandData, selection[1]));
+            var geneData = this.data.geneData.slice(this.bisectGenes(this.data.geneData, selection[0]), this.bisectGenes(this.data.geneData, selection[1]));
+           $('.variations-badge').attr('data-badge', variationData.length);
+           $('.cytobands-badge').attr('data-badge', cytobandsData.length);
+           $('.genes-badge').attr('data-badge', geneData.length);
+           $(".variation-table").bootstrapTable('load', variationData);
+           $(".cytobands-table").bootstrapTable('load', cytobandsData);
+           $(".gene-table").bootstrapTable('load', geneData);
+        }
+    }
+    
+    brushend(self) {
+        if (this.gs) {
+            this.gs.empty();
+            this.gs.setXDomain(d3.event.selection.map(this.x.invert, this.x));
             this.gs.renderLayers();
         } else {
             var selection = d3.event.selection.map(this.x.invert, this.x)
@@ -700,6 +766,30 @@ class GenomeSlider {
            $(".variation-table").bootstrapTable('load', variationData);
            $(".cytobands-table").bootstrapTable('load', cytobandsData);
            $(".gene-table").bootstrapTable('load', geneData);
+        }
+    }
+    
+    
+    
+    renderLayer(lyr) {
+        var rdr = this.toRender;
+        this.rendering = true;
+        if (this.rendering && rdr[lyr]) {
+           if (this.rendering && lyr == 'pqarm') {
+            this.renderPQBand();
+            }
+            if (this.rendering && lyr == 'cytoband') {
+                this.renderCytoBand();
+            }
+            if (this.rendering && lyr == 'gene') {
+                this.renderGene();
+            }
+            if (this.rendering && lyr == 'census') {
+                this.renderCensus();
+            }
+            if (this.rendering && lyr == 'variation') {
+                this.renderVariations();
+            }
         }
     }
     
@@ -788,7 +878,6 @@ class GenomeSlider {
     
 
     $(document).on("focusin", ".tabbable-rect", function() {
-        console.log("caoiu");
         var svg_id = $(this).closest('svg').attr('id').split('-')[1];
         var index = gs.bisectVariation(gs.data.variationData, $(this).attr("data-x"));
         var tableData = gs.data.variationData.slice(index, index+1);
@@ -798,7 +887,6 @@ class GenomeSlider {
     });
 
     $(document).on("keydown", function(event) {
-        console.log(event);
         if (event.keyCode == 39) {
           $('.tabbable-rect.tabbable-variations').attr('tabindex', -1);
           $('.tabbable-rect.tabbable-cytobands').each(function(id, e) { $(e).attr('tabindex', id)});
